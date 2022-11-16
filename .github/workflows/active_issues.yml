@@ -1,0 +1,38 @@
+# This is a basic workflow to help you get started with Actions
+# https://github.com/marketplace/actions/add-to-github-projects
+# https://github.com/actions-ecosystem
+# need to create a repo level secret with a PAT token given repo and workflow scopes named MY_GITHUB_TOKEN to work
+
+# Generate token
+# https://github.com/settings/tokens/new
+
+# Create secret
+# https://github.com/Emerson-Data-Science/<repository name>/settings/secrets/actions
+
+name: Assign Project and Labels
+
+on:
+  issues:
+    types: [opened,reopened,edited]
+
+jobs:
+  add-to-project:
+    name: Add issue to project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@v0.3.0
+        with:
+          project-url: https://github.com/orgs/Emerson-Data-Science/projects/13
+          github-token: ${{ secrets.MY_GITHUB_TOKEN }}
+  add-issue-label:
+    name: Add sprint label to issue
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: |
+            Current Sprint
+          
+
+          
