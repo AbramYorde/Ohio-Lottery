@@ -35,7 +35,7 @@ weighted_potential = function(prizes,amounts,odds,cost){
   
   return(weighted_potential)
 }
-weighted_potential(prizes,amounts,odds)
+weighted_potential(prizes,amounts,odds,cost)
 
 
 
@@ -48,17 +48,16 @@ prize_files = list.files(
 )
 
 ## running OCR on prizes remaining
-pdf_read = pdf_ocr_text(
+pdf_text = pdf_ocr_text(
   pdf = prize_files[2],
-  dpi = 800
+  dpi = 300
 )
-
 
 ## running initial formatting
 line_storage = c()
-for(i in 1:length(pdf_read)){
+for(i in 1:length(pdf_text)){
   ## pulling page of interest
-  page = pdf_read[i]
+  page = pdf_text[i]
   
   ## pulling game numbers on page
   game_number_locations = str_locate_all(
@@ -94,8 +93,10 @@ for(i in 1:length(pdf_read)){
 }
 
 ## starting to pull information
+valid_costs = c(2,5,10)
 game_storage = list()
 kill_list = c()
+cost_kill_list = c()
 game_counter = 0
 for(i in 1:length(line_storage)){
   ## initial line cleaning
@@ -141,6 +142,11 @@ for(i in 1:length(line_storage)){
     
     ## incrementing game counter
     game_counter = game_counter + 1
+    
+    ## checking if valid cost
+    if(!cost %in% valid_costs){
+      cost_kill_list = c(cost_kill_list,game_counter)
+    }
   }
   
   ## recording prizes and amounts
@@ -179,11 +185,13 @@ for(i in 1:length(line_storage)){
 }
 ## storing final game
 game_storage[[game_name]] = game_list
-final_kill_list = unique(kill_list)
 keep_list = seq(1,length(game_storage))
+game_storage_clean = game_storage[keep_list[!keep_list %in% cost_kill_list]]
 
-## removing games with errors
-game_storage_clean = game_storage[keep_list[!keep_list %in% final_kill_list]]
+# ## removing games with errors
+# final_kill_list = unique(kill_list)
+# game_storage_clean = game_storage[keep_list[!keep_list %in% final_kill_list]]
+
 name = c()
 cost = c()
 number = c()
@@ -207,14 +215,40 @@ lottery_odds = read.csv(here('projects','scratch-off-probability','data','scratc
 
 ## running calculations
 weighted_results = results %>%
-  inner_join(lottery_odds) %>%
+  left_join(lottery_odds) %>%
   mutate(weighted_potential = -999)
 for(game_name in unique(weighted_results$name)){
-  tmp = game_storage_clean[[game_name]]
-  prizes = tmp$prizes
-  amounts = tmp$amounts
+  # grabbing odds and cost
   odds = weighted_results$odds[weighted_results$name == game_name]
   cost = weighted_results$cost[weighted_results$name == game_name]
+  
+  # pulling game info
+  tmp = game_storage_clean[[game_name]]
+  
+  # grabbing prizes and amounts
+  prizes = tmp$prizes
+  amounts = tmp$amounts
+  prize_nas = sum(is.na(prizes))
+  amount_nas = sum(is.na(amounts))
+  # if(prize_nas + amount_nas > 0){
+  #   print(game_name)
+  #   print(cost)
+  #   stop('correct that shit')
+  #   amounts[11] = 50417
+  #   amounts = c(6,amounts)
+  #   amounts = c(2315,76721,394317)
+  #   amounts
+  # 
+  #   prizes[2] = 20000
+  #   prizes = c(150000,prizes)
+  #   prizes = c(500,100,50)
+  #   prizes
+  # 
+  #   game_storage_clean[[game_name]]$prizes = prizes
+  #   game_storage_clean[[game_name]]$amounts = amounts
+  # }
+  
+  
   weighted_results$weighted_potential[weighted_results$name == game_name] = weighted_potential(prizes,amounts,odds,cost)
 }
 
