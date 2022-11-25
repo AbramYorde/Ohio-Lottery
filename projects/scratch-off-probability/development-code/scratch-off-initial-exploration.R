@@ -20,7 +20,7 @@ odds = 4.57
 prizes = c(10000,5000,1000,500,100,50,20,10,5,4,2)
 amounts = c(4,6,43,156,3031,6024,25360,51297,52170,200025,243051)
 
-weighted_potential = function(prizes,amounts,odds,cost){
+weighted_potential = function(prizes,amounts,odds,cost,old = F){
   odds = 1/odds
   prizes_remaining = sum(amounts)
   # calculating remaining losers
@@ -30,9 +30,13 @@ weighted_potential = function(prizes,amounts,odds,cost){
   total_prizes = c(prizes,0)
   total_remaining = losers_remaining + prizes_remaining
   total_probs = (total_amounts / total_remaining)
-  # calculating weighted potential score (monte-carlo 1e06 samples)
-  weighted_potential = mean(sample(x = total_prizes,size = 1e06,replace = T,prob = total_probs)) - cost
-
+  if(old){
+    # calculating weighted potential score
+    weighted_potential = sum((total_prizes - cost) * total_amounts)/total_remaining
+  }else{
+    # monte-carlo (spend 100 dollars)
+    weighted_potential = mean(sample(x = total_prizes,size = 1e06,replace = T,prob = total_probs)) - cost
+  }
   return(weighted_potential)
 }
 weighted_potential(prizes,amounts,odds,cost)
@@ -53,11 +57,23 @@ prize_formatter = function(x){
       str_remove_all(',') %>%
       as.numeric()
   }
-  ## handling XK per year for X years
+  ## handling XK for X years
   if(str_detect(x,str_c(prize,'K'))){
     years = str_extract(str_to_upper(x),'\\d{1,2}(?= YRS)') %>%
       as.numeric()
-    prize = prize * 1000 * years
+    ## per week
+    if(str_detect(x,str_c(prize,'K/WK'))){
+      prize = prize * 1000 * 52 * years
+    }else{
+      ## per year
+      prize = prize * 1000 * years
+    }
+  }
+  ## handling per day for X years
+  if(str_detect(x,str_c(prize,'/DY'))){
+    years = str_extract(str_to_upper(x),'\\d{1,2}(?= YRS)') %>%
+      as.numeric()
+    prize = prize * 365 * years
   }
   return(prize)
 }
@@ -166,7 +182,7 @@ for(game_name in unique(weighted_results$name)){
   }
   
   
-  weighted_results$weighted_potential[weighted_results$name == game_name] = weighted_potential(prizes,amounts,odds,cost)
+  weighted_results$weighted_potential[weighted_results$name == game_name] = weighted_potential(prizes,amounts,odds,cost,old = T)
 }
 
 
