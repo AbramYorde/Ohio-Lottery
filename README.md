@@ -1,4 +1,4 @@
 
 # Ohio-Scratchoffs: Informed Gambling
 
-![image](https://user-images.githubusercontent.com/33256566/204062103-4cd644f4-0b2c-431d-b045-118ea30a02e3.png)
+![image](https://user-images.githubusercontent.com/33256566/204062156-25da8de9-1b9e-4f6f-89ec-6ab0c33e327c.png)
