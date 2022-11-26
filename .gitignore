@@ -116,3 +116,5 @@ venv.bak/
 .local
 projects/scratch-off-probability/data/Prizes Remaining __ The Ohio Lottery.html
 projects/scratch-off-probability/data/Prizes Remaining __ The Ohio Lottery_files - Shortcut.lnk
+*.png
+*.pdf

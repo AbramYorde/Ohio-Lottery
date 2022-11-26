@@ -9,6 +9,9 @@
 ## loading required pac
 pacman::p_load(tidyverse, rvest, httr, here, xml2, scales, lubridate)
 
+## pulling up webpage
+browseURL('https://www.ohiolottery.com/Games/ScratchOffs/Prizes-Remaining')
+
 
 # local calculation test --------------------------------------------------
 
@@ -202,11 +205,10 @@ for(game_name in unique(weighted_results$name)){
 
 # plotting results --------------------------------------------------------
 plot_data = weighted_results %>%
-  arrange(weighted_potential) %>%
   group_by(cost) %>%
-  filter(weighted_potential > cost) %>%
-  mutate(risk_ratio = weighted_potential / cost) %>%
-  mutate(rank = row_number(desc(weighted_potential))) %>%
+  mutate(risk_ratio = (weighted_potential / cost / odds)) %>%
+  mutate(rank = row_number(desc(risk_ratio))) %>%
+  arrange(desc(rank)) %>%
   filter(rank <= 3)
   
 plot_data$name = factor(str_c(plot_data$name,': ',plot_data$number),str_c(plot_data$name,': ',plot_data$number))
@@ -220,9 +222,14 @@ p1 = ggplot(plot_data,aes(x = name,y = risk_ratio)) +
     labeller = label_both) +
   labs(
     x = 'Scratchoff Game Name',
-    y = '5% Chance of X Times Ticket Cost',
-    title = str_c('Top 3 Games per Cost Amount: ',format(now(),'%Y/%m/%d'))
+    y = '5% Reward / Ticket Cost * Odds',
+    title = str_c('Top 3 Games per Cost Amount: ',format(now(tzone = 'America/New_York'),'%Y/%m/%d'))
   ) +
   scale_y_continuous()
 print(p1)
-
+ggsave(
+  filename = here('projects','scratch-off-probability','figures',str_c(format(now(tzone = 'America/New_York'),'%Y-%m-%d'),'_Best_Games.png')),
+  plot = p1,
+  width = 9/1.25,
+  height = 16/1.25
+)
