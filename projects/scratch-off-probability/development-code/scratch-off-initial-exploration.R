@@ -7,7 +7,7 @@
 # https://cran.r-project.org/web/packages/magick/vignettes/intro.html
 
 ## loading required pac
-pacman::p_load(tidyverse, rvest, httr, here, pdftools, tesseract, magick, xml2)
+pacman::p_load(tidyverse, rvest, httr, here, xml2, scales, lubridate)
 
 
 # local calculation test --------------------------------------------------
@@ -20,7 +20,15 @@ odds = 4.57
 prizes = c(10000,5000,1000,500,100,50,20,10,5,4,2)
 amounts = c(4,6,43,156,3031,6024,25360,51297,52170,200025,243051)
 
-weighted_potential = function(prizes,amounts,odds,cost,old = F){
+weighted_potential = function(
+    prizes,
+    amounts,
+    odds,
+    cost,
+    old = F,
+    seed = 11,
+    quantile = 0.95
+){
   odds = 1/odds
   prizes_remaining = sum(amounts)
   # calculating remaining losers
@@ -32,10 +40,16 @@ weighted_potential = function(prizes,amounts,odds,cost,old = F){
   total_probs = (total_amounts / total_remaining)
   if(old){
     # calculating weighted potential score
-    weighted_potential = sum((total_prizes - cost) * total_amounts)/total_remaining
+    weighted_potential = sum((total_prizes - cost) * total_amounts) / total_remaining / cost
   }else{
     # monte-carlo (spend 100 dollars)
-    weighted_potential = mean(sample(x = total_prizes,size = 1e06,replace = T,prob = total_probs)) - cost
+    set.seed(seed)
+    samples = sample(x = total_prizes,size = 1e06,replace = T,prob = total_probs) - cost
+    quantile_return = quantile(samples,quantile)
+    mean_return = mean(samples)
+    sd_return = sd(samples)
+    weighted_potential = (mean_return + qnorm(quantile)*sd_return) / cost * (100/cost)
+    weighted_potential = quantile_return
   }
   return(weighted_potential)
 }
@@ -182,8 +196,33 @@ for(game_name in unique(weighted_results$name)){
   }
   
   
-  weighted_results$weighted_potential[weighted_results$name == game_name] = weighted_potential(prizes,amounts,odds,cost,old = T)
+  weighted_results$weighted_potential[weighted_results$name == game_name] = weighted_potential(prizes,amounts,odds,cost,old = F,quantile = 0.95)
 }
 
 
+# plotting results --------------------------------------------------------
+plot_data = weighted_results %>%
+  arrange(weighted_potential) %>%
+  group_by(cost) %>%
+  filter(weighted_potential > cost) %>%
+  mutate(risk_ratio = weighted_potential / cost) %>%
+  mutate(rank = row_number(desc(weighted_potential))) %>%
+  filter(rank <= 3)
+  
+plot_data$name = factor(str_c(plot_data$name,': ',plot_data$number),str_c(plot_data$name,': ',plot_data$number))
+p1 = ggplot(plot_data,aes(x = name,y = risk_ratio)) +
+  geom_bar(stat = 'identity') +
+  coord_flip() +
+  facet_wrap(
+    facets = cost~.,
+    scales = 'free_y',
+    ncol = 1,
+    labeller = label_both) +
+  labs(
+    x = 'Scratchoff Game Name',
+    y = '5% Chance of X Times Ticket Cost',
+    title = str_c('Top 3 Games per Cost Amount: ',format(now(),'%Y/%m/%d'))
+  ) +
+  scale_y_continuous()
+print(p1)
 
