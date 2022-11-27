@@ -1,5 +1,5 @@
 
-# Ohio-Scratchoffs: Informed Gambling
+# Ohio-Lottery: Informed Gambling
 
 > The goal of this repo is to look at the different Ohio lottery games and understand which is the best to play, and what the best approach to playing them are.
 
