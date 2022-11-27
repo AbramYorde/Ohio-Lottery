@@ -25,7 +25,8 @@
 > You can get to the HTML daily by visiting the link, clicking see all, and then saving the page. The tables can then be scraped from the local html file
 
 ## Scratch Off Probabilities
-![image](https://user-images.githubusercontent.com/33256566/204062966-254d2ab0-c7f5-4a26-bb6a-255deadf90d7.png)
+![2022-11-26_Best_Games](https://user-images.githubusercontent.com/33256566/204118314-c040fa54-b078-47a9-a938-12cf1b809dc1.png)
+
 
 ## Keno
 
