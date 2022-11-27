@@ -25,6 +25,9 @@
 > You can get to the HTML daily by visiting the link, clicking see all, and then saving the page. The tables can then be scraped from the local html file
 
 ## Scratch Off Probabilities
+[Main Project Location](projects/scratch-off-probability/)   
+
+
 
 ### Sample Analysis Results
 ![2022-11-26_Best_Games](https://user-images.githubusercontent.com/33256566/204118314-c040fa54-b078-47a9-a938-12cf1b809dc1.png)
